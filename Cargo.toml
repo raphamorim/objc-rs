@@ -9,6 +9,7 @@ readme = "README.md"
 repository = "http://github.com/raphamorim/objc-rs"
 documentation = "http://github.com/raphamorim/objc-rs"
 license = "MIT"
+edition = "2021"
 
 exclude = [
   ".gitignore",
