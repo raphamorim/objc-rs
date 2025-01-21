@@ -1,7 +1,6 @@
-Objective-C Runtime bindings and wrapper for Rust.
+Note: This is a maintained fork from objc crate.
 
-* Documentation: http://ssheldon.github.io/rust-objc/objc/
-* Crate: https://crates.io/crates/objc
+Objective-C Runtime bindings and wrapper for Rust.
 
 ## Messaging objects
 
