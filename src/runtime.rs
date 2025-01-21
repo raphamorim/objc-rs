@@ -3,6 +3,8 @@
 //! For more information on foreign functions, see Apple's documentation:
 //! <https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ObjCRuntimeRef/index.html>
 
+#![allow(missing_docs)]
+
 use std::ffi::{CStr, CString};
 use std::fmt;
 use std::os::raw::{c_char, c_int, c_uint, c_void};

@@ -60,7 +60,7 @@ The bindings can be used on Linux or *BSD utilizing the
 [GNUstep Objective-C runtime](https://www.github.com/gnustep/libobjc2).
 */
 
-#![crate_name = "objc"]
+#![crate_name = "objc_rs"]
 #![crate_type = "lib"]
 
 #![warn(missing_docs)]

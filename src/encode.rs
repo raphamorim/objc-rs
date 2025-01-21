@@ -72,8 +72,8 @@ impl Clone for Encoding {
 impl PartialEq for Encoding {
     fn eq(&self, other: &Encoding) -> bool {
         // strip qualifiers when comparing
-        let s = self.as_str().trim_left_matches(QUALIFIERS);
-        let o = other.as_str().trim_left_matches(QUALIFIERS);
+        let s = self.as_str().trim_start_matches(QUALIFIERS);
+        let o = other.as_str().trim_start_matches(QUALIFIERS);
         s == o
     }
 }
