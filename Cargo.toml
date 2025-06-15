@@ -6,8 +6,8 @@ authors = ["Steven Sheldon", "Raphael Amorim"]
 description = "Objective-C Runtime bindings and wrapper for Rust. Maintained fork of objc crate"
 keywords = ["objective-c", "osx", "ios", "cocoa", "uikit"]
 readme = "README.md"
-repository = "http://github.com/raphamorim/objc-rs"
-documentation = "http://github.com/raphamorim/objc-rs"
+repository = "https://github.com/raphamorim/objc-rs"
+documentation = "https://github.com/raphamorim/objc-rs"
 license = "MIT"
 edition = "2021"
 
