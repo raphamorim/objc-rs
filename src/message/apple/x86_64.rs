@@ -1,8 +1,8 @@
 use std::mem;
 
-use runtime::Imp;
+use crate::runtime::Imp;
 
-extern {
+unsafe extern "C" {
     fn objc_msgSend();
     fn objc_msgSend_stret();
 

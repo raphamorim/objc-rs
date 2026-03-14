@@ -62,7 +62,6 @@ The bindings can be used on Linux or *BSD utilizing the
 
 #![crate_name = "objc_rs"]
 #![crate_type = "lib"]
-
 #![warn(missing_docs)]
 
 extern crate malloc_buf;
@@ -78,13 +77,13 @@ pub use message::send_super_message as __send_super_message;
 #[macro_use]
 mod macros;
 
-pub mod runtime;
 pub mod declare;
-pub mod rc;
 mod encode;
 #[cfg(feature = "exception")]
 mod exception;
 mod message;
+pub mod rc;
+pub mod runtime;
 
 #[cfg(test)]
 mod test_utils;

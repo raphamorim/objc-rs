@@ -1,9 +1,9 @@
 use std::any::{Any, TypeId};
 use std::mem;
 
-use runtime::Imp;
+use crate::runtime::Imp;
 
-extern {
+unsafe extern "C" {
     fn objc_msgSend();
     fn objc_msgSend_fpret();
     fn objc_msgSend_stret();
@@ -20,8 +20,7 @@ pub fn msg_send_fn<R: Any>() -> Imp {
 
     let type_id = TypeId::of::<R>();
     let size = mem::size_of::<R>();
-    if type_id == TypeId::of::<f32>() ||
-            type_id == TypeId::of::<f64>() {
+    if type_id == TypeId::of::<f32>() || type_id == TypeId::of::<f64>() {
         objc_msgSend_fpret
     } else if size == 0 || size == 1 || size == 2 || size == 4 || size == 8 {
         objc_msgSend

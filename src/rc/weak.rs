@@ -1,8 +1,8 @@
 use std::cell::UnsafeCell;
 use std::ptr;
 
-use runtime::{Object, self};
 use super::StrongPtr;
+use crate::runtime::{self, Object};
 
 // Our pointer must have the same address even if we are moved, so Box it.
 // Although loading the WeakPtr may modify the pointer, it is thread safe,
@@ -17,7 +17,9 @@ impl WeakPtr {
     /// Unsafe because the caller must ensure the given object pointer is valid.
     pub unsafe fn new(obj: *mut Object) -> Self {
         let ptr = Box::new(UnsafeCell::new(ptr::null_mut()));
-        runtime::objc_initWeak(ptr.get(), obj);
+        unsafe {
+            runtime::objc_initWeak(ptr.get(), obj);
+        }
         WeakPtr(ptr)
     }
 

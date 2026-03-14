@@ -1,6 +1,6 @@
 [package]
 name = "objc-rs"
-version = "0.2.8"
+version = "0.3.0"
 authors = ["Steven Sheldon", "Raphael Amorim"]
 
 description = "Objective-C Runtime bindings and wrapper for Rust. Maintained fork of objc crate"
@@ -9,7 +9,7 @@ readme = "README.md"
 repository = "https://github.com/raphamorim/objc-rs"
 documentation = "https://github.com/raphamorim/objc-rs"
 license = "MIT"
-edition = "2021"
+edition = "2024"
 
 exclude = [
   ".gitignore",

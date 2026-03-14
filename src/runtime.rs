@@ -5,15 +5,15 @@
 
 #![allow(missing_docs)]
 
+use malloc_buf::MallocBuffer;
 use std::ffi::{CStr, CString};
 use std::fmt;
 use std::os::raw::{c_char, c_int, c_uint, c_void};
 use std::ptr;
 use std::str;
-use malloc_buf::MallocBuffer;
 
-use encode;
-use {Encode, Encoding};
+use crate::encode;
+use crate::{Encode, Encoding};
 
 /// The Objective-C `BOOL` type.
 ///
@@ -65,7 +65,7 @@ pub struct Class {
 /// A type that represents an Objective-C protocol.
 #[repr(C)]
 pub struct Protocol {
-    _priv: PrivateMarker
+    _priv: PrivateMarker,
 }
 
 /// A type that represents an instance of a class.
@@ -75,10 +75,10 @@ pub struct Object {
 }
 
 /// A pointer to the start of a method implementation.
-pub type Imp = unsafe extern fn();
+pub type Imp = unsafe extern "C" fn();
 
 #[link(name = "objc", kind = "dylib")]
-extern {
+unsafe extern "C" {
     pub fn sel_registerName(name: *const c_char) -> Sel;
     pub fn sel_getName(sel: Sel) -> *const c_char;
 
@@ -90,12 +90,23 @@ extern {
     pub fn class_copyMethodList(cls: *const Class, outCount: *mut c_uint) -> *mut *const Method;
     pub fn class_copyIvarList(cls: *const Class, outCount: *mut c_uint) -> *mut *const Ivar;
     pub fn class_addMethod(cls: *mut Class, name: Sel, imp: Imp, types: *const c_char) -> BOOL;
-    pub fn class_addIvar(cls: *mut Class, name: *const c_char, size: usize, alignment: u8, types: *const c_char) -> BOOL;
+    pub fn class_addIvar(
+        cls: *mut Class,
+        name: *const c_char,
+        size: usize,
+        alignment: u8,
+        types: *const c_char,
+    ) -> BOOL;
     pub fn class_addProtocol(cls: *mut Class, proto: *const Protocol) -> BOOL;
     pub fn class_conformsToProtocol(cls: *const Class, proto: *const Protocol) -> BOOL;
-    pub fn class_copyProtocolList(cls: *const Class, outCount: *mut c_uint) -> *mut *const Protocol;
+    pub fn class_copyProtocolList(cls: *const Class, outCount: *mut c_uint)
+    -> *mut *const Protocol;
 
-    pub fn objc_allocateClassPair(superclass: *const Class, name: *const c_char, extraBytes: usize) -> *mut Class;
+    pub fn objc_allocateClassPair(
+        superclass: *const Class,
+        name: *const c_char,
+        extraBytes: usize,
+    ) -> *mut Class;
     pub fn objc_disposeClassPair(cls: *mut Class);
     pub fn objc_registerClassPair(cls: *mut Class);
 
@@ -114,12 +125,20 @@ extern {
     pub fn objc_autoreleasePoolPush() -> *mut c_void;
     pub fn objc_autoreleasePoolPop(context: *mut c_void);
 
-    pub fn protocol_addMethodDescription(proto: *mut Protocol, name: Sel, types: *const c_char, isRequiredMethod: BOOL,
-                                         isInstanceMethod: BOOL);
+    pub fn protocol_addMethodDescription(
+        proto: *mut Protocol,
+        name: Sel,
+        types: *const c_char,
+        isRequiredMethod: BOOL,
+        isInstanceMethod: BOOL,
+    );
     pub fn protocol_addProtocol(proto: *mut Protocol, addition: *const Protocol);
     pub fn protocol_getName(proto: *const Protocol) -> *const c_char;
     pub fn protocol_isEqual(proto: *const Protocol, other: *const Protocol) -> BOOL;
-    pub fn protocol_copyProtocolList(proto: *const Protocol, outCount: *mut c_uint) -> *mut *const Protocol;
+    pub fn protocol_copyProtocolList(
+        proto: *const Protocol,
+        outCount: *mut c_uint,
+    ) -> *mut *const Protocol;
     pub fn protocol_conformsToProtocol(proto: *const Protocol, other: *const Protocol) -> BOOL;
 
     pub fn ivar_getName(ivar: *const Ivar) -> *const c_char;
@@ -149,16 +168,12 @@ impl Sel {
     /// maps the method name to a selector, and returns the selector value.
     pub fn register(name: &str) -> Sel {
         let name = CString::new(name).unwrap();
-        unsafe {
-            sel_registerName(name.as_ptr())
-        }
+        unsafe { sel_registerName(name.as_ptr()) }
     }
 
     /// Returns the name of the method specified by self.
     pub fn name(&self) -> &str {
-        let name = unsafe {
-            CStr::from_ptr(sel_getName(*self))
-        };
+        let name = unsafe { CStr::from_ptr(sel_getName(*self)) };
         str::from_utf8(name.to_bytes()).unwrap()
     }
 
@@ -167,9 +182,7 @@ impl Sel {
     /// This is almost never what you want; use `Sel::register()` instead.
     #[inline]
     pub unsafe fn from_ptr(ptr: *const c_void) -> Sel {
-        Sel {
-            ptr: ptr,
-        }
+        Sel { ptr: ptr }
     }
 
     /// Returns a pointer to the raw selector.
@@ -185,16 +198,18 @@ impl PartialEq for Sel {
     }
 }
 
-impl Eq for Sel { }
+impl Eq for Sel {}
 
 // Sel is safe to share across threads because it is immutable
-unsafe impl Sync for Sel { }
-unsafe impl Send for Sel { }
+unsafe impl Sync for Sel {}
+unsafe impl Send for Sel {}
 
-impl Copy for Sel { }
+impl Copy for Sel {}
 
 impl Clone for Sel {
-    fn clone(&self) -> Sel { *self }
+    fn clone(&self) -> Sel {
+        *self
+    }
 }
 
 impl fmt::Debug for Sel {
@@ -206,25 +221,19 @@ impl fmt::Debug for Sel {
 impl Ivar {
     /// Returns the name of self.
     pub fn name(&self) -> &str {
-        let name = unsafe {
-            CStr::from_ptr(ivar_getName(self))
-        };
+        let name = unsafe { CStr::from_ptr(ivar_getName(self)) };
         str::from_utf8(name.to_bytes()).unwrap()
     }
 
     /// Returns the offset of self.
     pub fn offset(&self) -> isize {
-        let offset = unsafe {
-            ivar_getOffset(self)
-        };
+        let offset = unsafe { ivar_getOffset(self) };
         offset as isize
     }
 
     /// Returns the `Encoding` of self.
     pub fn type_encoding(&self) -> Encoding {
-        let encoding = unsafe {
-            CStr::from_ptr(ivar_getTypeEncoding(self))
-        };
+        let encoding = unsafe { CStr::from_ptr(ivar_getTypeEncoding(self)) };
         let s = str::from_utf8(encoding.to_bytes()).unwrap();
         encode::from_str(s)
     }
@@ -233,9 +242,7 @@ impl Ivar {
 impl Method {
     /// Returns the name of self.
     pub fn name(&self) -> Sel {
-        unsafe {
-            method_getName(self)
-        }
+        unsafe { method_getName(self) }
     }
 
     /// Returns the `Encoding` of self's return type.
@@ -261,16 +268,12 @@ impl Method {
 
     /// Returns the number of arguments accepted by self.
     pub fn arguments_count(&self) -> usize {
-        unsafe {
-            method_getNumberOfArguments(self) as usize
-        }
+        unsafe { method_getNumberOfArguments(self) as usize }
     }
 
     /// Returns the implementation of self.
     pub fn implementation(&self) -> Imp {
-        unsafe {
-            method_getImplementation(self)
-        }
+        unsafe { method_getImplementation(self) }
     }
 }
 
@@ -296,16 +299,12 @@ impl Class {
 
     /// Returns the total number of registered classes.
     pub fn classes_count() -> usize {
-        unsafe {
-            objc_getClassList(ptr::null_mut(), 0) as usize
-        }
+        unsafe { objc_getClassList(ptr::null_mut(), 0) as usize }
     }
 
     /// Returns the name of self.
     pub fn name(&self) -> &str {
-        let name = unsafe {
-            CStr::from_ptr(class_getName(self))
-        };
+        let name = unsafe { CStr::from_ptr(class_getName(self)) };
         str::from_utf8(name.to_bytes()).unwrap()
     }
 
@@ -313,7 +312,11 @@ impl Class {
     pub fn superclass(&self) -> Option<&Class> {
         unsafe {
             let superclass = class_getSuperclass(self);
-            if superclass.is_null() { None } else { Some(&*superclass) }
+            if superclass.is_null() {
+                None
+            } else {
+                Some(&*superclass)
+            }
         }
     }
 
@@ -327,9 +330,7 @@ impl Class {
 
     /// Returns the size of instances of self.
     pub fn instance_size(&self) -> usize {
-        unsafe {
-            class_getInstanceSize(self) as usize
-        }
+        unsafe { class_getInstanceSize(self) as usize }
     }
 
     /// Returns a specified instance method for self, or `None` if self and
@@ -338,7 +339,11 @@ impl Class {
     pub fn instance_method(&self, sel: Sel) -> Option<&Method> {
         unsafe {
             let method = class_getInstanceMethod(self, sel);
-            if method.is_null() { None } else { Some(&*method) }
+            if method.is_null() {
+                None
+            } else {
+                Some(&*method)
+            }
         }
     }
 
@@ -359,7 +364,6 @@ impl Class {
             let methods = class_copyMethodList(self, &mut count);
             MallocBuffer::new(methods as *mut _, count as usize).unwrap()
         }
-
     }
 
     /// Checks whether this class conforms to the specified protocol.
@@ -394,7 +398,7 @@ impl PartialEq for Class {
     }
 }
 
-impl Eq for Class { }
+impl Eq for Class {}
 
 impl fmt::Debug for Class {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -438,9 +442,7 @@ impl Protocol {
 
     /// Returns the name of self.
     pub fn name(&self) -> &str {
-        let name = unsafe {
-            CStr::from_ptr(protocol_getName(self))
-        };
+        let name = unsafe { CStr::from_ptr(protocol_getName(self)) };
         str::from_utf8(name.to_bytes()).unwrap()
     }
 }
@@ -451,7 +453,7 @@ impl PartialEq for Protocol {
     }
 }
 
-impl Eq for Protocol { }
+impl Eq for Protocol {}
 
 impl fmt::Debug for Protocol {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -462,16 +464,17 @@ impl fmt::Debug for Protocol {
 impl Object {
     /// Returns the class of self.
     pub fn class(&self) -> &Class {
-        unsafe {
-            &*object_getClass(self)
-        }
+        unsafe { &*object_getClass(self) }
     }
 
     /// Returns a reference to the ivar of self with the given name.
     /// Panics if self has no ivar with the given name.
     /// Unsafe because the caller must ensure that the ivar is actually
     /// of type `T`.
-    pub unsafe fn get_ivar<T>(&self, name: &str) -> &T where T: Encode {
+    pub unsafe fn get_ivar<T>(&self, name: &str) -> &T
+    where
+        T: Encode,
+    {
         let offset = {
             let cls = self.class();
             match cls.instance_variable(name) {
@@ -482,11 +485,11 @@ impl Object {
                 None => panic!("Ivar {} not found on class {:?}", name, cls),
             }
         };
-        let ptr = {
+        let ptr = unsafe {
             let self_ptr: *const Object = self;
             (self_ptr as *const u8).offset(offset) as *const T
         };
-        &*ptr
+        unsafe { &*ptr }
     }
 
     /// Returns a mutable reference to the ivar of self with the given name.
@@ -494,7 +497,9 @@ impl Object {
     /// Unsafe because the caller must ensure that the ivar is actually
     /// of type `T`.
     pub unsafe fn get_mut_ivar<T>(&mut self, name: &str) -> &mut T
-            where T: Encode {
+    where
+        T: Encode,
+    {
         let offset = {
             let cls = self.class();
             match cls.instance_variable(name) {
@@ -505,11 +510,11 @@ impl Object {
                 None => panic!("Ivar {} not found on class {:?}", name, cls),
             }
         };
-        let ptr = {
+        let ptr = unsafe {
             let self_ptr: *mut Object = self;
             (self_ptr as *mut u8).offset(offset) as *mut T
         };
-        &mut *ptr
+        unsafe { &mut *ptr }
     }
 
     /// Sets the value of the ivar of self with the given name.
@@ -517,8 +522,12 @@ impl Object {
     /// Unsafe because the caller must ensure that the ivar is actually
     /// of type `T`.
     pub unsafe fn set_ivar<T>(&mut self, name: &str, value: T)
-            where T: Encode {
-        *self.get_mut_ivar::<T>(name) = value;
+    where
+        T: Encode,
+    {
+        unsafe {
+            *self.get_mut_ivar::<T>(name) = value;
+        }
     }
 }
 
@@ -530,9 +539,9 @@ impl fmt::Debug for Object {
 
 #[cfg(test)]
 mod tests {
-    use test_utils;
-    use Encode;
     use super::{Class, Protocol, Sel};
+    use crate::Encode;
+    use crate::test_utils;
 
     #[test]
     fn test_ivar() {
@@ -597,9 +606,7 @@ mod tests {
     #[test]
     fn test_protocol_method() {
         let class = test_utils::custom_class();
-        let result: i32 = unsafe {
-            msg_send![class, addNumber:1 toNumber:2]
-        };
+        let result: i32 = unsafe { msg_send![class, addNumber:1 toNumber:2] };
         assert_eq!(result, 3);
     }
 

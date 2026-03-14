@@ -2,8 +2,8 @@ use std::fmt;
 use std::mem;
 use std::ops::Deref;
 
-use runtime::{Object, self};
 use super::WeakPtr;
+use crate::runtime::{self, Object};
 
 /// A pointer that strongly references an object, ensuring it won't be deallocated.
 pub struct StrongPtr(*mut Object);
@@ -21,7 +21,7 @@ impl StrongPtr {
     /// When dropped, the object will be released.
     /// Unsafe because the caller must ensure the given object pointer is valid.
     pub unsafe fn retain(ptr: *mut Object) -> Self {
-        StrongPtr(runtime::objc_retain(ptr))
+        StrongPtr(unsafe { runtime::objc_retain(ptr) })
     }
 
     /// Autoreleases self, meaning that the object is not immediately released,
@@ -52,9 +52,7 @@ impl Drop for StrongPtr {
 
 impl Clone for StrongPtr {
     fn clone(&self) -> StrongPtr {
-        unsafe {
-            StrongPtr::retain(self.0)
-        }
+        unsafe { StrongPtr::retain(self.0) }
     }
 }
 
