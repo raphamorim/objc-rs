@@ -1,6 +1,6 @@
 [package]
 name = "objc-rs"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Steven Sheldon", "Raphael Amorim"]
 
 description = "Objective-C Runtime bindings and wrapper for Rust. Maintained fork of objc crate"
@@ -25,8 +25,8 @@ exception = ["objc_exception"]
 verify_message = []
 
 [dependencies]
-malloc_buf = "0.0"
+malloc_buf = "1.0"
 
 [dependencies.objc_exception]
-version = "0.1"
+version = "0.1.2"
 optional = true
