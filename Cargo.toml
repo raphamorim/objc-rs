@@ -1,6 +1,6 @@
 [package]
 name = "objc-rs"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Steven Sheldon", "Raphael Amorim"]
 
 description = "Objective-C Runtime bindings and wrapper for Rust. Maintained fork of objc crate"
